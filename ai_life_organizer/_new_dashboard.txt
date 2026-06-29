@@ -1,0 +1,293 @@
+# ── Dashboard template ──────────────────────────────────────────────────────
+
+DASHBOARD_TEMPLATE = (
+    BASE_TEMPLATE
+    .replace("{% block content %}{% endblock %}", """{% block content %}
+<!-- Hero -->
+<div class="dashboard-hero">
+  <div>
+    <h1>Welcome Back, {{ current_user.name }}! &#128075;</h1>
+    <p class="text-muted mb-0">{{ greeting }} &mdash; Here's your life overview</p>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <span class="stat-num">{{ stats.total_tasks }}</span>
+      <span>Total Tasks</span>
+    </div>
+    <div class="hero-stat">
+      <span class="stat-num">{{ stats.pending }}</span>
+      <span>Pending</span>
+    </div>
+    <div class="hero-stat">
+      <span class="stat-num">{{ stats.goals_active }}</span>
+      <span>Active Goals</span>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Create -->
+<div class="quick-create mb-4">
+  <span>Quick Add:</span>
+  <a href="{{ url_for('tasks_new') }}" class="btn btn-sm btn-purple">+ New Task</a>
+  <a href="{{ url_for('goals_new') }}" class="btn btn-sm btn-amber">+ New Goal</a>
+  <a href="{{ url_for('calendar_new') }}" class="btn btn-sm btn-teal">+ New Event</a>
+  <a href="{{ url_for('notes_new') }}" class="btn btn-sm btn-pink">+ New Note</a>
+  <a href="{{ url_for('habits_index') }}" class="btn btn-sm btn-green">&#10003; Habits</a>
+</div>
+
+<!-- Row 1: 4 stat cards -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card purple">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="stat-num" style="color:#a78bfa">{{ stats.pending }}</span>
+          <span class="stat-label">Pending Tasks</span>
+        </div>
+        <i class="bi bi-check2-square stat-icon" style="color:#7c3aed"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card amber">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="stat-num" style="color:#fbbf24">{{ stats.due_today }}</span>
+          <span class="stat-label">Due Today</span>
+        </div>
+        <i class="bi bi-calendar-event stat-icon" style="color:#f59e0b"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card red">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="stat-num" style="color:#f87171">{{ stats.overdue }}</span>
+          <span class="stat-label">Overdue Tasks</span>
+        </div>
+        <i class="bi bi-exclamation-triangle stat-icon" style="color:#ef4444"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card green">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="stat-num" style="color:#34d399">{{ stats.goals_active }}</span>
+          <span class="stat-label">Active Goals</span>
+        </div>
+        <i class="bi bi-trophy stat-icon" style="color:#10b981"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Row 2: Weekly Activity + AI Score -->
+<div class="row g-3 mb-3">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-bar-chart-fill" style="color:var(--accent-purple)"></i>
+        Weekly Activity
+      </div>
+      <div class="card-body">
+        <canvas id="weeklyActivityChart" height="90"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-speedometer2" style="color:var(--accent-amber)"></i>
+        AI Score
+      </div>
+      <div class="card-body d-flex flex-column align-items-center justify-content-center gap-3">
+        <div class="gauge-container">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="60" fill="none" stroke="#30363d" stroke-width="12"/>
+            <circle cx="80" cy="80" r="60" fill="none"
+              stroke="{{ '#10b981' if ai_score > 70 else ('#f59e0b' if ai_score >= 40 else '#ef4444') }}"
+              stroke-width="12"
+              stroke-dasharray="{{ (ai_score / 100 * 376.99)|round(1) }} 376.99"
+              stroke-dashoffset="94.25"
+              stroke-linecap="round"
+              transform="rotate(-90 80 80)"/>
+          </svg>
+          <div class="gauge-score">
+            <span class="score-num" style="color:{{ '#10b981' if ai_score > 70 else ('#f59e0b' if ai_score >= 40 else '#ef4444') }}">{{ ai_score }}</span>
+            <span class="score-label">/ 100</span>
+          </div>
+        </div>
+        <div class="text-center">
+          <div style="font-size:0.85rem;font-weight:600;color:{{ '#10b981' if ai_score > 70 else ('#f59e0b' if ai_score >= 40 else '#ef4444') }}">
+            {{ 'Excellent' if ai_score > 70 else ('Good' if ai_score >= 40 else 'Needs Work') }}
+          </div>
+          <div class="clock-widget">
+            <div class="clock-time" id="live-clock">--:--:--</div>
+            <div class="clock-date" id="live-date"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Row 3: Upcoming Deadlines + AI Recommendations -->
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-calendar-week me-1" style="color:var(--accent-amber)"></i>Upcoming Deadlines</span>
+        <a href="{{ url_for('calendar_index') }}" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem">View All</a>
+      </div>
+      <div class="card-body py-2">
+        {% for t in upcoming_deadlines %}
+        <div class="timeline-item">
+          <div class="timeline-dot" style="background:{{ '#ef4444' if t.priority == 'Critical' else ('#f59e0b' if t.priority == 'High' else '#7c3aed') }}"></div>
+          <div class="flex-grow-1">
+            <div style="font-size:0.88rem;font-weight:500">{{ t.title }}</div>
+            <div style="font-size:0.75rem;color:var(--text-secondary)">{{ t.deadline.strftime('%b %d, %Y %H:%M') if t.deadline else 'No deadline' }}</div>
+          </div>
+          <span class="badge bg-{{ 'danger' if t.priority == 'Critical' else ('warning' if t.priority == 'High' else 'secondary') }}" style="font-size:0.7rem;align-self:flex-start">{{ t.priority }}</span>
+        </div>
+        {% else %}
+        <p class="text-muted small mt-2">No upcoming deadlines.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-lightbulb me-1" style="color:var(--accent-amber)"></i>AI Recommendations
+      </div>
+      <div class="card-body py-2">
+        {% for t in recommendations %}
+        <div class="timeline-item">
+          <div class="timeline-dot" style="background:var(--accent-purple)"></div>
+          <div class="flex-grow-1">
+            <div style="font-size:0.88rem;font-weight:500">{{ t.title }}</div>
+            <div style="font-size:0.75rem;color:var(--text-secondary)">Priority: {{ t.priority }}</div>
+          </div>
+          <a href="{{ url_for('tasks_edit', task_id=t.id) }}" style="font-size:0.75rem;color:var(--accent-purple)">View</a>
+        </div>
+        {% else %}
+        <p class="text-muted small mt-2">All caught up! No urgent tasks.</p>
+        {% endfor %}
+        {% if habits %}
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color)">
+          <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:8px">Today's Habits</div>
+          {% for h in habits[:4] %}
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span style="font-size:0.85rem">{{ h.name }}</span>
+            {% if h.id in checked_today %}
+              <span class="badge bg-success" style="font-size:0.7rem">Done &#10003;</span>
+            {% else %}
+              <a href="{{ url_for('habits_checkin', habit_id=h.id) }}" class="badge bg-secondary" style="font-size:0.7rem;cursor:pointer;text-decoration:none" onclick="event.preventDefault();fetch('{{ url_for('habits_checkin', habit_id=h.id) }}',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}','Content-Type':'application/x-www-form-urlencoded'},body:'csrf_token={{ csrf_token() }}'}).then(()=>location.reload())">Check In</a>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Row 4: Goal Progress + Recent Notes -->
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-trophy me-1" style="color:var(--accent-green)"></i>Goal Progress</span>
+        <a href="{{ url_for('goals_index') }}" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem">All Goals</a>
+      </div>
+      <div class="card-body">
+        {% for g in goals %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:0.88rem">{{ g.name }}</span>
+            <span style="font-size:0.8rem;color:{{ '#10b981' if g.status == 'Achieved' else ('#ef4444' if g.status == 'Overdue' else 'var(--accent-purple)') }}">{{ g.progress }}%</span>
+          </div>
+          <div class="progress" style="height:5px">
+            <div class="progress-bar" style="width:{{ g.progress }}%;background:{{ '#10b981' if g.status == 'Achieved' else ('#ef4444' if g.status == 'Overdue' else 'var(--accent-purple)') }}"></div>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted small">No goals yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-journal-text me-1" style="color:var(--accent-teal)"></i>Recent Notes</span>
+        <a href="{{ url_for('notes_index') }}" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem">All Notes</a>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for n in recent_notes %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div style="font-size:0.88rem;font-weight:500">{{ n.title }}</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary)">{{ n.updated_at.strftime('%b %d, %Y') }}</div>
+              </div>
+              {% if n.category %}<span class="badge badge-purple" style="font-size:0.7rem">{{ n.category }}</span>{% endif %}
+            </div>
+          </li>
+          {% else %}
+          <li class="list-group-item text-muted" style="font-size:0.88rem">No notes yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}""")
+    .replace("{% block extra_js %}{% endblock %}", """{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+// Live clock
+function updateClock() {
+  const now = new Date();
+  const cl = document.getElementById('live-clock');
+  const dt = document.getElementById('live-date');
+  if(cl) cl.textContent = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  if(dt) dt.textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Weekly activity chart
+const wLabels = {{ weekly_labels|safe }};
+const wValues = {{ weekly_values|safe }};
+const colors = wValues.map((v, i) => {
+  const palette = ['#7c3aed','#ec4899','#f59e0b','#10b981','#06b6d4','#8b5cf6','#f43f5e'];
+  return palette[i % palette.length];
+});
+new Chart(document.getElementById('weeklyActivityChart'), {
+  type: 'bar',
+  data: {
+    labels: wLabels,
+    datasets: [{
+      label: 'Completed Tasks',
+      data: wValues,
+      backgroundColor: colors,
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } },
+      y: { beginAtZero: true, ticks: { stepSize: 1, color: '#8b949e' }, grid: { color: '#30363d' } }
+    }
+  }
+});
+</script>
+{% endblock %}""")
+)

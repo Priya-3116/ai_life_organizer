@@ -1,0 +1,152 @@
+# ── Analytics template ───────────────────────────────────────────────────────
+
+ANALYTICS_TEMPLATE = (
+    BASE_TEMPLATE
+    .replace("{% block content %}{% endblock %}", """{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <i class="bi bi-bar-chart-line" style="font-size:1.4rem;color:var(--accent-purple)"></i>
+  <h3 class="mb-0">Analytics</h3>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card purple">
+      <span class="stat-num" style="color:#a78bfa">{{ stats.total_tasks }}</span>
+      <span class="stat-label">Total Tasks</span>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card green">
+      <span class="stat-num" style="color:#34d399">{{ stats.completed_tasks }}</span>
+      <span class="stat-label">Completed</span>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card amber">
+      <span class="stat-num" style="color:#fbbf24">{{ '%.0f'|format(stats.completion_rate) }}%</span>
+      <span class="stat-label">Completion Rate</span>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card red">
+      <span class="stat-num" style="color:#f87171">{{ '%.0f'|format(stats.productivity_score) }}</span>
+      <span class="stat-label">Productivity Score</span>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Weekly completions chart -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-bar-chart me-1" style="color:var(--accent-purple)"></i>Weekly Task Completions (last 8 weeks)</div>
+      <div class="card-body"><canvas id="weeklyChart" height="120"></canvas></div>
+    </div>
+  </div>
+
+  <!-- AI Reports donut: task status distribution -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-pie-chart me-1" style="color:var(--accent-pink)"></i>AI Report: Task Status</div>
+      <div class="card-body"><canvas id="taskStatusChart" height="180"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Goal status doughnut -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-trophy me-1" style="color:var(--accent-green)"></i>Goal Status</div>
+      <div class="card-body"><canvas id="goalChart" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Priority breakdown -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-funnel me-1" style="color:var(--accent-amber)"></i>Tasks by Priority</div>
+      <div class="card-body"><canvas id="priorityChart" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Habit completion rate + goal ratios -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-activity me-1" style="color:var(--accent-teal)"></i>Habit & Goal Health</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1"><span style="font-size:0.85rem">Habit Completion (30d)</span><strong style="color:var(--accent-teal)">{{ stats.habit_rate }}%</strong></div>
+          <div class="progress" style="height:6px"><div class="progress-bar" style="width:{{ stats.habit_rate }}%;background:var(--accent-teal)"></div></div>
+        </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1"><span style="font-size:0.85rem">Goals Achieved</span><strong style="color:var(--accent-green)">{{ stats.achieved_goals }}</strong></div>
+          <div class="progress" style="height:6px"><div class="progress-bar" style="width:{{ stats.goal_achievement_ratio }}%;background:var(--accent-green)"></div></div>
+        </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1"><span style="font-size:0.85rem">Goals Active</span><strong style="color:#a78bfa">{{ stats.active_goals }}</strong></div>
+          <div class="progress" style="height:6px"><div class="progress-bar" style="width:{{ (stats.active_goals / (stats.total_goals or 1) * 100)|round }}%;background:var(--accent-purple)"></div></div>
+        </div>
+        <div>
+          <div class="d-flex justify-content-between mb-1"><span style="font-size:0.85rem">Goals Overdue</span><strong style="color:var(--accent-red)">{{ stats.overdue_goals }}</strong></div>
+          <div class="progress" style="height:6px"><div class="progress-bar" style="width:{{ (stats.overdue_goals / (stats.total_goals or 1) * 100)|round }}%;background:var(--accent-red)"></div></div>
+        </div>
+        <hr style="border-color:var(--border-color);margin:12px 0">
+        <p class="mb-0" style="font-size:0.85rem">Avg goal progress: <strong style="color:var(--accent-amber)">{{ '%.0f'|format(stats.avg_goal_progress) }}%</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}""")
+    .replace("{% block extra_js %}{% endblock %}", """{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const chartDefaults = {
+  plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } },
+  scales: {
+    x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } },
+    y: { grid: { color: '#30363d' }, ticks: { color: '#8b949e', stepSize: 1 }, beginAtZero: true }
+  }
+};
+
+const wData = {{ weekly_data|safe }};
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'bar',
+  data: {
+    labels: wData.labels,
+    datasets: [{ label: 'Completed Tasks', data: wData.values, backgroundColor: '#7c3aed', borderRadius: 5, borderSkipped: false }]
+  },
+  options: { ...chartDefaults }
+});
+
+const tsData = {{ task_status_data|safe }};
+new Chart(document.getElementById('taskStatusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Pending', 'In Progress', 'Completed'],
+    datasets: [{ data: tsData, backgroundColor: ['#7c3aed', '#f59e0b', '#10b981'], borderWidth: 0, hoverOffset: 8 }]
+  },
+  options: { plugins: { legend: { position: 'bottom', labels: { color: '#8b949e' } } }, cutout: '65%' }
+});
+
+const gData = {{ goal_data|safe }};
+new Chart(document.getElementById('goalChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Achieved', 'Active', 'Overdue'],
+    datasets: [{ data: gData, backgroundColor: ['#10b981', '#7c3aed', '#ef4444'], borderWidth: 0, hoverOffset: 8 }]
+  },
+  options: { plugins: { legend: { position: 'bottom', labels: { color: '#8b949e' } } }, cutout: '65%' }
+});
+
+const pData = {{ priority_data|safe }};
+new Chart(document.getElementById('priorityChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Critical', 'High', 'Medium', 'Low'],
+    datasets: [{ label: 'Tasks', data: pData, backgroundColor: ['#ef4444', '#f59e0b', '#7c3aed', '#8b949e'], borderRadius: 5, borderSkipped: false }]
+  },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e', stepSize: 1 }, beginAtZero: true }, y: { grid: { display: false }, ticks: { color: '#8b949e' } } } }
+});
+</script>
+{% endblock %}""")
+)

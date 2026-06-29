@@ -1,0 +1,263 @@
+BASE_TEMPLATE = """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AI Life Organizer{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --bg-primary: #0f1117;
+      --bg-secondary: #161b22;
+      --bg-card: #161b22;
+      --border-color: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --accent-purple: #7c3aed;
+      --accent-pink: #ec4899;
+      --accent-amber: #f59e0b;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-teal: #06b6d4;
+      --gradient-primary: linear-gradient(135deg, #7c3aed, #ec4899);
+    }
+    * { box-sizing: border-box; }
+    body { background: var(--bg-primary); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; }
+    a { color: var(--accent-purple); text-decoration: none; }
+    a:hover { color: #a78bfa; }
+    .sidebar { background: var(--bg-secondary); border-right: 1px solid var(--border-color); width: 250px; min-height: 100vh; position: fixed; top: 0; left: 0; z-index: 100; display: flex; flex-direction: column; }
+    .sidebar-logo { padding: 20px 16px 12px; border-bottom: 1px solid var(--border-color); }
+    .sidebar-logo .logo-text { font-size: 1.1rem; font-weight: 700; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sidebar-section-label { font-size: 0.65rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; padding: 16px 16px 4px; }
+    .sidebar .nav-link { color: var(--text-secondary); padding: 9px 16px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin: 1px 8px; font-size: 0.88rem; transition: all 0.15s; border-left: 3px solid transparent; }
+    .sidebar .nav-link:hover { color: var(--text-primary); background: #ffffff0d; }
+    .sidebar .nav-link.active { color: #a78bfa; background: #7c3aed1a; border-left-color: var(--accent-purple); }
+    .sidebar .nav-link i { font-size: 1rem; width: 18px; text-align: center; }
+    .sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid var(--border-color); }
+    .sidebar-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; color: white; flex-shrink: 0; }
+    .topbar { margin-left: 250px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); padding: 10px 24px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 99; }
+    .topbar .search-input { background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; width: 240px; outline: none; }
+    .topbar .search-input::placeholder { color: var(--text-secondary); }
+    .topbar .search-input:focus { border-color: var(--accent-purple); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .notif-btn { background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; position: relative; padding: 4px; transition: color 0.15s; }
+    .notif-btn:hover { color: var(--text-primary); }
+    .notif-badge { position: absolute; top: -2px; right: -4px; background: var(--accent-red); color: white; font-size: 0.6rem; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .user-chip { display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 8px; background: #ffffff0a; border: 1px solid var(--border-color); cursor: pointer; color: var(--text-primary); font-size: 0.85rem; }
+    .main-content { margin-left: 250px; padding: 24px; min-height: 100vh; }
+    .card-dark { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-primary); }
+    .card-header { background: transparent; border-bottom: 1px solid var(--border-color); color: var(--text-primary); font-weight: 600; font-size: 0.9rem; }
+    .card-body { color: var(--text-primary); }
+    .card-footer { background: transparent; border-top: 1px solid var(--border-color); }
+    .stat-card { padding: 20px; border-radius: 12px; }
+    .stat-card.purple { background: linear-gradient(135deg, #7c3aed22, #7c3aed44); border: 1px solid #7c3aed55; }
+    .stat-card.amber  { background: linear-gradient(135deg, #f59e0b22, #f59e0b44); border: 1px solid #f59e0b55; }
+    .stat-card.red    { background: linear-gradient(135deg, #ef444422, #ef444444); border: 1px solid #ef444455; }
+    .stat-card.green  { background: linear-gradient(135deg, #10b98122, #10b98144); border: 1px solid #10b98155; }
+    .stat-num { font-size: 2rem; font-weight: 700; line-height: 1; display: block; }
+    .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; display: block; }
+    .stat-icon { font-size: 2rem; opacity: 0.4; }
+    .btn-purple { background: var(--gradient-primary); color: white; border: none; border-radius: 8px; }
+    .btn-purple:hover { opacity: 0.9; color: white; }
+    .btn-amber { background: var(--accent-amber); color: #0f1117; border: none; border-radius: 8px; }
+    .btn-amber:hover { opacity: 0.9; color: #0f1117; }
+    .btn-teal { background: var(--accent-teal); color: white; border: none; border-radius: 8px; }
+    .btn-teal:hover { opacity: 0.9; color: white; }
+    .btn-pink { background: var(--accent-pink); color: white; border: none; border-radius: 8px; }
+    .btn-pink:hover { opacity: 0.9; color: white; }
+    .btn-green { background: var(--accent-green); color: white; border: none; border-radius: 8px; }
+    .btn-green:hover { opacity: 0.9; color: white; }
+    .btn-outline-secondary { color: var(--text-secondary); border-color: var(--border-color); background: transparent; }
+    .btn-outline-secondary:hover { background: #ffffff11; color: var(--text-primary); border-color: var(--text-secondary); }
+    .btn-outline-danger { color: var(--accent-red); border-color: var(--accent-red); background: transparent; }
+    .btn-outline-danger:hover { background: #ef444422; color: var(--accent-red); }
+    .btn-outline-info { color: var(--accent-teal); border-color: var(--accent-teal); background: transparent; }
+    .btn-outline-info:hover { background: #06b6d422; color: var(--accent-teal); }
+    .btn-outline-success { color: var(--accent-green); border-color: var(--accent-green); background: transparent; }
+    .btn-outline-success:hover { background: #10b98122; color: var(--accent-green); }
+    .btn-outline-primary { color: var(--accent-purple); border-color: var(--accent-purple); background: transparent; }
+    .btn-outline-primary:hover { background: #7c3aed22; color: var(--accent-purple); }
+    .btn-primary { background: var(--accent-purple); border-color: var(--accent-purple); color: white; }
+    .btn-primary:hover { background: #6d28d9; border-color: #6d28d9; color: white; }
+    .badge-purple { background: #7c3aed33; color: #a78bfa; border: 1px solid #7c3aed55; }
+    .badge { border-radius: 6px; font-weight: 500; }
+    .bg-secondary { background: #30363d !important; color: var(--text-primary) !important; }
+    .bg-success  { background: #10b98133 !important; color: var(--accent-green) !important; border: 1px solid #10b98155; }
+    .bg-danger   { background: #ef444433 !important; color: var(--accent-red) !important; border: 1px solid #ef444455; }
+    .bg-warning  { background: #f59e0b33 !important; color: var(--accent-amber) !important; border: 1px solid #f59e0b55; }
+    .bg-info     { background: #06b6d433 !important; color: var(--accent-teal) !important; border: 1px solid #06b6d455; }
+    .bg-primary  { background: #7c3aed33 !important; color: #a78bfa !important; border: 1px solid #7c3aed55; }
+    .form-control, .form-select { background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; }
+    .form-control:focus, .form-select:focus { background: var(--bg-primary); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 0 3px #7c3aed22; }
+    .form-control::placeholder { color: var(--text-secondary); }
+    .form-label { color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; }
+    .form-select option { background: var(--bg-secondary); color: var(--text-primary); }
+    .form-check-input { background-color: var(--bg-primary); border-color: var(--border-color); }
+    .form-check-input:checked { background-color: var(--accent-purple); border-color: var(--accent-purple); }
+    .form-check-label { color: var(--text-secondary); }
+    .invalid-feedback { color: var(--accent-red); font-size: 0.8rem; }
+    .is-invalid { border-color: var(--accent-red) !important; }
+    .table { color: var(--text-primary); --bs-table-bg: transparent; --bs-table-striped-bg: transparent; }
+    .table > :not(caption) > * > * { background-color: transparent; color: var(--text-primary); border-bottom-color: var(--border-color); }
+    .table-light { --bs-table-bg: #ffffff08; color: var(--text-secondary); }
+    .table-hover > tbody > tr:hover > * { background-color: #ffffff06; }
+    .table thead th { color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border-color); }
+    .list-group-item { background: transparent; border-color: var(--border-color); color: var(--text-primary); }
+    .list-group-flush .list-group-item { border-left: 0; border-right: 0; }
+    .list-group-item-light { background: #ffffff06 !important; }
+    .alert { border-radius: 10px; border: 1px solid; }
+    .alert-success { background: #10b98115; border-color: #10b98133; color: #6ee7b7; }
+    .alert-danger  { background: #ef444415; border-color: #ef444433; color: #fca5a5; }
+    .alert-warning { background: #f59e0b15; border-color: #f59e0b33; color: #fcd34d; }
+    .alert-info    { background: #06b6d415; border-color: #06b6d433; color: #67e8f9; }
+    .btn-close { filter: invert(1) opacity(0.6); }
+    .progress { background: #ffffff11; border-radius: 6px; }
+    .progress-bar { border-radius: 6px; }
+    .text-muted { color: var(--text-secondary) !important; }
+    .text-primary { color: var(--accent-purple) !important; }
+    .text-success { color: var(--accent-green) !important; }
+    .text-danger  { color: var(--accent-red) !important; }
+    .text-warning { color: var(--accent-amber) !important; }
+    .text-info    { color: var(--accent-teal) !important; }
+    .priority-Critical { color: var(--accent-red); font-weight: 600; }
+    .priority-High   { color: var(--accent-amber); }
+    .priority-Medium { color: #a78bfa; }
+    .priority-Low    { color: var(--text-secondary); }
+    .dashboard-hero { background: linear-gradient(135deg, #7c3aed1a, #ec489911); border: 1px solid #7c3aed33; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .dashboard-hero h1 { font-size: 1.6rem; font-weight: 700; margin: 0 0 4px; }
+    .hero-stats { display: flex; gap: 32px; }
+    .hero-stat { text-align: center; }
+    .hero-stat .stat-num { font-size: 1.8rem; font-weight: 700; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-stat span:last-child { font-size: 0.75rem; color: var(--text-secondary); display: block; }
+    .quick-create { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; align-items: center; }
+    .quick-create span { font-size: 0.8rem; color: var(--text-secondary); margin-right: 4px; }
+    .gauge-container { position: relative; width: 160px; height: 160px; margin: 0 auto; }
+    .gauge-score { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .gauge-score .score-num { font-size: 2.2rem; font-weight: 700; line-height: 1; }
+    .gauge-score .score-label { font-size: 0.7rem; color: var(--text-secondary); }
+    .clock-widget { text-align: center; padding: 20px; }
+    .clock-time { font-size: 2rem; font-weight: 700; font-family: 'Courier New', monospace; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .clock-date { font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; }
+    .timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+    .timeline-item:last-child { border-bottom: 0; }
+    .timeline-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .habit-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; }
+    .habit-grid { display: flex; gap: 4px; margin-top: 8px; }
+    .habit-dot { width: 18px; height: 18px; border-radius: 4px; background: var(--border-color); }
+    .habit-dot.done { background: var(--accent-green); }
+    .streak-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem; font-weight: 600; color: var(--accent-amber); }
+    .dropdown-menu { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; }
+    .dropdown-item { color: var(--text-secondary); font-size: 0.88rem; }
+    .dropdown-item:hover { background: #ffffff0d; color: var(--text-primary); }
+    .dropdown-divider { border-color: var(--border-color); }
+    .dropdown-item.text-danger { color: var(--accent-red) !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s; }
+      .sidebar.open { transform: translateX(0); }
+      .main-content, .topbar { margin-left: 0; }
+      .dashboard-hero { flex-direction: column; }
+      .hero-stats { gap: 16px; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <a href="{{ url_for('dashboard') }}" class="d-flex align-items-center gap-2" style="text-decoration:none">
+      <i class="bi bi-grid-3x3-gap" style="font-size:1.3rem;color:var(--accent-purple)"></i>
+      <span class="logo-text">Life OS</span>
+    </a>
+  </div>
+  <div class="sidebar-section-label">Main</div>
+  <nav>
+    <a href="{{ url_for('dashboard') }}"      class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+    <a href="{{ url_for('tasks_index') }}"    class="nav-link {% if request.endpoint and 'task' in request.endpoint %}active{% endif %}"><i class="bi bi-check2-square"></i> Tasks</a>
+    <a href="{{ url_for('goals_index') }}"    class="nav-link {% if request.endpoint and 'goal' in request.endpoint %}active{% endif %}"><i class="bi bi-trophy"></i> Goals</a>
+    <a href="{{ url_for('calendar_index') }}" class="nav-link {% if request.endpoint and 'calendar' in request.endpoint %}active{% endif %}"><i class="bi bi-calendar3"></i> Calendar</a>
+    <a href="{{ url_for('notes_index') }}"    class="nav-link {% if request.endpoint and 'note' in request.endpoint %}active{% endif %}"><i class="bi bi-journal-text"></i> Notes</a>
+    <a href="{{ url_for('documents_index') }}"class="nav-link {% if request.endpoint and 'document' in request.endpoint %}active{% endif %}"><i class="bi bi-folder2"></i> Documents</a>
+    <a href="{{ url_for('ai_chat') }}"        class="nav-link {% if request.endpoint == 'ai_chat' %}active{% endif %}"><i class="bi bi-robot"></i> AI Assistant</a>
+    <a href="{{ url_for('analytics_index') }}"class="nav-link {% if request.endpoint == 'analytics_index' %}active{% endif %}"><i class="bi bi-bar-chart-line"></i> Analytics</a>
+  </nav>
+  <div class="sidebar-section-label">Tools</div>
+  <nav>
+    <a href="{{ url_for('habits_index') }}"   class="nav-link {% if request.endpoint and 'habit' in request.endpoint %}active{% endif %}"><i class="bi bi-activity"></i> Habits</a>
+    <a href="{{ url_for('reminders_panel') }}"class="nav-link {% if request.endpoint and 'reminder' in request.endpoint %}active{% endif %}"><i class="bi bi-bell"></i> Reminders</a>
+    <a href="{{ url_for('profile') }}"        class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}"><i class="bi bi-person"></i> Profile</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="d-flex align-items-center gap-2">
+      <div class="sidebar-avatar">{{ current_user.name[0].upper() }}</div>
+      <div>
+        <div style="font-size:0.82rem;font-weight:600">{{ current_user.name }}</div>
+        <a href="{{ url_for('logout') }}" style="font-size:0.72rem;color:var(--text-secondary)"><i class="bi bi-box-arrow-right"></i> Logout</a>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="topbar">
+  <i class="bi bi-search" style="color:var(--text-secondary);font-size:0.9rem"></i>
+  <input type="text" class="search-input" placeholder="Search..." id="global-search">
+  <div class="topbar-right">
+    <a href="{{ url_for('reminders_panel') }}" style="text-decoration:none">
+      <button class="notif-btn" title="Reminders">
+        <i class="bi bi-bell"></i>
+        <span id="notif-badge" class="notif-badge" style="display:none">0</span>
+      </button>
+    </a>
+    <div class="dropdown">
+      <div class="user-chip dropdown-toggle" data-bs-toggle="dropdown">
+        <div class="sidebar-avatar" style="width:24px;height:24px;font-size:0.65rem">{{ current_user.name[0].upper() }}</div>
+        <span>{{ current_user.name }}</span>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="bi bi-person me-2"></i>Profile</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endif %}
+<div class="{% if current_user.is_authenticated %}main-content{% else %}container mt-4{% endif %}">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% if current_user.is_authenticated %}
+<script>
+function updateNotifBadge() {
+  fetch("{{ url_for('reminders_unread_count') }}")
+    .then(r => r.json())
+    .then(d => {
+      const b = document.getElementById("notif-badge");
+      if (d.count > 0) { b.textContent = d.count; b.style.display = "flex"; }
+      else { b.style.display = "none"; }
+    }).catch(() => {});
+}
+updateNotifBadge();
+setInterval(updateNotifBadge, 60000);
+</script>
+{% endif %}
+{% block extra_js %}{% endblock %}
+</body>
+</html>
+"""
