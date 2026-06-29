@@ -136,6 +136,7 @@ The system enables users to:
 
 # 📂 Project Structure
 
+
 ai_life_organizer/
 │
 ├── app.py
