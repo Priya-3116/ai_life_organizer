@@ -229,29 +229,37 @@ http://127.0.0.1:5000
 # 📷 Screenshots
 
 * Login Page
+
   <img width="496" height="475" alt="Screenshot 2026-06-29 140343" src="https://github.com/user-attachments/assets/325f982f-cdc5-402d-9eae-2cb6714472a5" />
 
 * Dashboard
+
   <img width="1219" height="622" alt="Screenshot 2026-06-29 140433" src="https://github.com/user-attachments/assets/78fcd640-6c08-4229-9bb7-dd3b2854d089" />
 
 * AI Assistant
-  <img width="829" height="373" alt="Screenshot 2026-06-29 140826" src="https://github.com/user-attachments/assets/34e30c68-3b2a-464b-be44-2c96ee5af205" />
+
+   <img width="829" height="373" alt="Screenshot 2026-06-29 140826" src="https://github.com/user-attachments/assets/34e30c68-3b2a-464b-be44-2c96ee5af205" />
 
 * Task Manager
-  <img width="1143" height="405" alt="Screenshot 2026-06-29 142201" src="https://github.com/user-attachments/assets/6f5e2bb2-4939-477e-b120-4f203001625c" />
+
+   <img width="1143" height="405" alt="Screenshot 2026-06-29 142201" src="https://github.com/user-attachments/assets/6f5e2bb2-4939-477e-b120-4f203001625c" />
 
 * Habit Tracker
+
   <img width="606" height="405" alt="Screenshot 2026-06-29 141010" src="https://github.com/user-attachments/assets/157c6340-6b6e-4cfd-841a-66703b259ff4" />
   <img width="390" height="222" alt="Screenshot 2026-06-29 141043" src="https://github.com/user-attachments/assets/2b77c443-b241-4404-b972-465437ce9fce" />
 
 
 * Analytics Dashboard
+
   <img width="1171" height="597" alt="Screenshot 2026-06-29 142527" src="https://github.com/user-attachments/assets/40068bb7-bcd2-4e14-b900-84195130bbbb" />
 
 * Mood Insights
+
   <img width="1139" height="497" alt="Screenshot 2026-06-29 141321" src="https://github.com/user-attachments/assets/7e9b7d2f-562e-43ca-9dce-aeb2c995d570" />
 
 * Kanban Board
+
   <img width="1154" height="458" alt="Screenshot 2026-06-29 141654" src="https://github.com/user-attachments/assets/7880bb50-b322-4d89-bae5-5fb84f8e4b8e" />
 
 
